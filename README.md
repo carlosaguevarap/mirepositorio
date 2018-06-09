@@ -13,6 +13,6 @@
 
 
 ## Snyk                
-[![Known Vulnerabilities](https://snyk.io/test/github/carlosaguevarap/mirepositorio:requirements.txt/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/carlosaguevarap/mirepositorio:requirements.txt?targetFile=requirements.txt)
+[![Known Vulnerabilities](https://snyk.io/test/github/carlosaguevarap/mirepositorio/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/carlosaguevarap/mirepositorio?targetFile=requirements.txt)
 
               

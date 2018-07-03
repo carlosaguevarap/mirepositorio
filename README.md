@@ -14,5 +14,4 @@
 
 ## Snyk                
 [![Known Vulnerabilities](https://snyk.io/test/github/carlosaguevarap/mirepositorio/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/carlosaguevarap/mirepositorio?targetFile=requirements.txt)
-
               

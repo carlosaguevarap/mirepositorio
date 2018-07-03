@@ -95,9 +95,6 @@ def main():
 
 
 
-
-
-
     # export to csv
     df.to_csv('../data/DataTemp.csv')
 

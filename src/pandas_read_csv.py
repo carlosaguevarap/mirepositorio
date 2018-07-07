@@ -145,6 +145,10 @@ def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,
         dfg=previous_data(dfg,column,num_previuos_data)
         colnames=colnames+"_"+column
 
+    #Eliminar registros con NaN
+    dfg=dfg.dropna()
+
+    #Dividir los datos en dos bloques(Escenario y pruebas)
     df_split=split_data_frame(dfg,split_percent)
 
     #Ruta de los achivos a generar

@@ -1,24 +1,10 @@
 from pandas import pandas as pd
 import numpy as np
-#import datetime as dt
+import math
 
-
-#Deprecated(Metodo solo de prueba)
-def read_file0():
-    print("*Leer Archivo*")
-
-    #Leer el archivo y unir la fecha(Date) y hora(Time) en un solo campo(Date_time)
-    df = pd.read_csv('../data/Data_Planta.csv',parse_dates=[['Date', 'Time']])
-
-
-    #Definir el Index
-    df.index = df["Date_Time"]
-
-    #df['Timestamp'] = df.Date_Time.values.astype(np.int64)
-    #df.set_index('Timestamp')
-
-    return df;
-
+#Leer el archivo csv
+#Params:
+#   filepath: Rura del archivo
 def read_file(filepath,columns_names):
     print("*Leer Archivo*")
 
@@ -42,18 +28,8 @@ def group_by_mean(dataframe,interval):
     print("*Agrupar*")
 
     #Agrupar Datos
-    dfg = dataframe.resample(interval).mean()
+    dfg = dataframe.resample(interval).mean().round(2)
     return dfg
-
-def replace_nan_column(dataframe,column_name,value):
-    print("*Cambiar NaN*")
-
-    # change NaN (empty data) to 'value'
-    if column_name in dataframe.columns:
-        #dataframe["column_name"]=dataframe[column_name].fillna(value)
-        dataframe[column_name] = dataframe[column_name].replace(np.nan,value)
-    return dataframe
-
 
 def previous_data(df,column_name,num_previous):
     print("*Datos Anteriores*")
@@ -126,16 +102,11 @@ def split_data_frame(data_frame,split_percent):
 
     return[df1,df2]
 
-
-def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,split_percent):
+def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,flag_error,split_percent):
     print("*Creando Escenario*")
 
     df=read_file(filepath_csv,["Date","Time"]+columns_names_array)
     dfg=group_by_mean(df,interval)
-
-    #dfg=replace_nan_column(dfg,'Humidity',-1)
-    #dfg=replace_nan_column(dfg,'TemperatureC',-1)
-    #dfg=replace_nan_column(dfg,'LDR',-1)
 
     #Nombres de las columnas para colocar en el nombre del archivo a generar
     colnames=""
@@ -145,6 +116,12 @@ def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,
         dfg=previous_data(dfg,column,num_previuos_data)
         colnames=colnames+"_"+column
 
+        if(flag_error):
+            sd=np.std(df[column])
+            n=df.index.size
+            e=sd/math.sqrt(n)
+            dfg[column+"_Error"] = (dfg[column+"_Actual"]*e).round(2)
+
     #Eliminar registros con NaN
     dfg=dfg.dropna()
 
@@ -152,7 +129,7 @@ def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,
     df_split=split_data_frame(dfg,split_percent)
 
     #Ruta de los achivos a generar
-    filename_export="../data_generated/Escenario"+colnames+"_"+interval+"_"+str(num_previuos_data)
+    filename_export="../data_generated/Escenario"+colnames+"_"+interval+"_"+str(num_previuos_data)+"_Error"+str(flag_error)
 
     #Exportar el archivo de datos
     df_split[0].to_csv(filename_export+"_data.csv")
@@ -163,7 +140,7 @@ def create_scenario(filepath_csv,columns_names_array,interval,num_previuos_data,
 
     print("*Escenario creado: "+filename_export+" *")
 
-def manager_scenarios(filepath_csv,interval,num_previuos_data,split_percent):
+def manager_scenarios(filepath_csv,interval,num_previuos_data,flag_error,split_percent):
     print("*Generar Escenarios*")
 
     H="Humidity"
@@ -188,35 +165,35 @@ def manager_scenarios(filepath_csv,interval,num_previuos_data,split_percent):
     colnam_htl=[H,T,L]
     colnam_thl=[T,H,L]
 
-    create_scenario(filepath_csv,colnam_h,interval,num_previuos_data,split_percent)#1
-    create_scenario(filepath_csv,colnam_t,interval,num_previuos_data,split_percent)#2
-    create_scenario(filepath_csv,colnam_l,interval,num_previuos_data,split_percent)#3
+    create_scenario(filepath_csv,colnam_h,interval,num_previuos_data,flag_error,split_percent)#1
+    create_scenario(filepath_csv,colnam_t,interval,num_previuos_data,flag_error,split_percent)#2
+    create_scenario(filepath_csv,colnam_l,interval,num_previuos_data,flag_error,split_percent)#3
 
-    create_scenario(filepath_csv,colnam_th,interval,num_previuos_data,split_percent)#4
-    create_scenario(filepath_csv,colnam_lh,interval,num_previuos_data,split_percent)#5
-    create_scenario(filepath_csv,colnam_ht,interval,num_previuos_data,split_percent)#6
-    create_scenario(filepath_csv,colnam_lt,interval,num_previuos_data,split_percent)#7
-    create_scenario(filepath_csv,colnam_hl,interval,num_previuos_data,split_percent)#8
-    create_scenario(filepath_csv,colnam_tl,interval,num_previuos_data,split_percent)#9
+    create_scenario(filepath_csv,colnam_th,interval,num_previuos_data,flag_error,split_percent)#4
+    create_scenario(filepath_csv,colnam_lh,interval,num_previuos_data,flag_error,split_percent)#5
+    create_scenario(filepath_csv,colnam_ht,interval,num_previuos_data,flag_error,split_percent)#6
+    create_scenario(filepath_csv,colnam_lt,interval,num_previuos_data,flag_error,split_percent)#7
+    create_scenario(filepath_csv,colnam_hl,interval,num_previuos_data,flag_error,split_percent)#8
+    create_scenario(filepath_csv,colnam_tl,interval,num_previuos_data,flag_error,split_percent)#9
 
-    create_scenario(filepath_csv,colnam_tlh,interval,num_previuos_data,split_percent)#10
-    create_scenario(filepath_csv,colnam_lth,interval,num_previuos_data,split_percent)#11
-    create_scenario(filepath_csv,colnam_hlt,interval,num_previuos_data,split_percent)#12
-    create_scenario(filepath_csv,colnam_lht,interval,num_previuos_data,split_percent)#13
-    create_scenario(filepath_csv,colnam_htl,interval,num_previuos_data,split_percent)#14
-    create_scenario(filepath_csv,colnam_thl,interval,num_previuos_data,split_percent)#15
-
-
-
-
+    create_scenario(filepath_csv,colnam_tlh,interval,num_previuos_data,flag_error,split_percent)#10
+    create_scenario(filepath_csv,colnam_lth,interval,num_previuos_data,flag_error,split_percent)#11
+    create_scenario(filepath_csv,colnam_hlt,interval,num_previuos_data,flag_error,split_percent)#12
+    create_scenario(filepath_csv,colnam_lht,interval,num_previuos_data,flag_error,split_percent)#13
+    create_scenario(filepath_csv,colnam_htl,interval,num_previuos_data,flag_error,split_percent)#14
+    create_scenario(filepath_csv,colnam_thl,interval,num_previuos_data,flag_error,split_percent)#15
 
 def main():
-    print("*********************Start*********************")
+    print("*********************INICIANDO*********************")
 
-    manager_scenarios('../data/Data_Planta.csv',"h",3,70)
+    #M: Mes
+    #h: horas
+    #T: minutos
+    #S: segundos
 
-    print("*********************End*********************")
+    manager_scenarios('../data/Data_Planta.csv',"h",4,True,90)
+    manager_scenarios('../data/Data_Planta.csv',"h",4,False,90)
 
+    print("*********************ESCENARIOS GENERADOS CON EXITO*********************")
 
 main()
-

@@ -37,7 +37,7 @@ def group_by(dataframe,interval,function_type):
 
     return dataframe
 
-def previous_data(df,column_name,num_previous):
+def previous_data(df,column_name,num_previous,error_value):
     print("*Datos Anteriores*")
 
     #Reindexar para trabajar con numero entero en index
@@ -65,10 +65,20 @@ def previous_data(df,column_name,num_previous):
             #Agregar al Dataframe consolidado
             prev_df = pd.concat([prev_df,aux_df])
 
+
+
     #Renombrar las columnas del dataframe
     for c in prev_df.columns:
         new_column_name=column_name+"_"+str(num_previous-c)
         prev_df.rename(columns={c: new_column_name}, inplace=True)
+
+        if(error_value is not None):
+            prev_df[new_column_name+"_Error"]=(prev_df[new_column_name]*error_value).round(2)
+            prev_df[new_column_name+"Temp"]=prev_df[new_column_name]
+            prev_df=prev_df.drop(new_column_name, 1)
+            prev_df[new_column_name]=prev_df[new_column_name+"Temp"]
+            prev_df=prev_df.drop(new_column_name+"Temp", 1)
+
 
     #Unir el DataFrame consolidado con el DataFrame Original
     df=pd.merge(df, prev_df,on="IndexNum", how='outer')
@@ -123,14 +133,21 @@ def create_scenario(filepath_csv,columns_names_array,interval,function_type,num_
 
     #Buscar datos anteriores en cada columna
     for column in columns_names_array:
-        dfg=previous_data(dfg,column,num_previuos_data)
-        colnames=colnames+"_"+column
-
-        if(flag_error):
+        error_value=None
+        if flag_error :
             sd=np.std(df[column])
             n=df.index.size
-            e=sd/math.sqrt(n)
-            dfg[column+"_Error"] = (dfg[column+"_Actual"]*e).round(2)
+            error_value=sd/math.sqrt(n)
+
+        dfg=previous_data(dfg,column,num_previuos_data,error_value)
+        colnames=colnames+"_"+column
+
+        if error_value is not None :
+            dfg[column+"_Error"] = (dfg[column+"_Actual"]*error_value).round(2)
+
+        #Enviar la columna de la variable a predecir al final
+        dfg[column]=dfg[column+"_Actual"]
+        dfg=dfg.drop(column+"_Actual", 1)
 
     #Eliminar registros con NaN
     dfg=dfg.dropna()
@@ -176,22 +193,22 @@ def manager_scenarios(filepath_csv,interval,function_type,num_previuos_data,flag
     colnam_thl=[T,H,L]
 
     create_scenario(filepath_csv,colnam_h,interval,function_type,num_previuos_data,flag_error,split_percent)#1
-    create_scenario(filepath_csv,colnam_t,interval,function_type,num_previuos_data,flag_error,split_percent)#2
-    create_scenario(filepath_csv,colnam_l,interval,function_type,num_previuos_data,flag_error,split_percent)#3
+    #create_scenario(filepath_csv,colnam_t,interval,function_type,num_previuos_data,flag_error,split_percent)#2
+    #create_scenario(filepath_csv,colnam_l,interval,function_type,num_previuos_data,flag_error,split_percent)#3
 
     create_scenario(filepath_csv,colnam_th,interval,function_type,num_previuos_data,flag_error,split_percent)#4
-    create_scenario(filepath_csv,colnam_lh,interval,function_type,num_previuos_data,flag_error,split_percent)#5
-    create_scenario(filepath_csv,colnam_ht,interval,function_type,num_previuos_data,flag_error,split_percent)#6
-    create_scenario(filepath_csv,colnam_lt,interval,function_type,num_previuos_data,flag_error,split_percent)#7
-    create_scenario(filepath_csv,colnam_hl,interval,function_type,num_previuos_data,flag_error,split_percent)#8
-    create_scenario(filepath_csv,colnam_tl,interval,function_type,num_previuos_data,flag_error,split_percent)#9
+    #create_scenario(filepath_csv,colnam_lh,interval,function_type,num_previuos_data,flag_error,split_percent)#5
+    #create_scenario(filepath_csv,colnam_ht,interval,function_type,num_previuos_data,flag_error,split_percent)#6
+    #create_scenario(filepath_csv,colnam_lt,interval,function_type,num_previuos_data,flag_error,split_percent)#7
+    #create_scenario(filepath_csv,colnam_hl,interval,function_type,num_previuos_data,flag_error,split_percent)#8
+    #create_scenario(filepath_csv,colnam_tl,interval,function_type,num_previuos_data,flag_error,split_percent)#9
 
     create_scenario(filepath_csv,colnam_tlh,interval,function_type,num_previuos_data,flag_error,split_percent)#10
-    create_scenario(filepath_csv,colnam_lth,interval,function_type,num_previuos_data,flag_error,split_percent)#11
-    create_scenario(filepath_csv,colnam_hlt,interval,function_type,num_previuos_data,flag_error,split_percent)#12
-    create_scenario(filepath_csv,colnam_lht,interval,function_type,num_previuos_data,flag_error,split_percent)#13
-    create_scenario(filepath_csv,colnam_htl,interval,function_type,num_previuos_data,flag_error,split_percent)#14
-    create_scenario(filepath_csv,colnam_thl,interval,function_type,num_previuos_data,flag_error,split_percent)#15
+    #create_scenario(filepath_csv,colnam_lth,interval,function_type,num_previuos_data,flag_error,split_percent)#11
+    #create_scenario(filepath_csv,colnam_hlt,interval,function_type,num_previuos_data,flag_error,split_percent)#12
+    #create_scenario(filepath_csv,colnam_lht,interval,function_type,num_previuos_data,flag_error,split_percent)#13
+    #create_scenario(filepath_csv,colnam_htl,interval,function_type,num_previuos_data,flag_error,split_percent)#14
+    #create_scenario(filepath_csv,colnam_thl,interval,function_type,num_previuos_data,flag_error,split_percent)#15
 
 def main():
     print("*********************INICIANDO*********************")
@@ -204,7 +221,7 @@ def main():
     filepath_csv="../data/Data_Planta.csv"
     interval="h"
     num_previuos_data=4
-    split_percent=90
+    split_percent=70
 
     manager_scenarios(filepath_csv,interval,"MEDIA",num_previuos_data,True,split_percent)
     manager_scenarios(filepath_csv,interval,"MEDIA",num_previuos_data,False,split_percent)

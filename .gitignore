@@ -1,6 +1,6 @@
  Created by https://www.gitignore.io/api/python
-.idea/
-.idea/vcs.xml
+/.idea
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -98,8 +98,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-data/
 /data
+/data_generated
+pd
 
 data_generated/
 /data_generated

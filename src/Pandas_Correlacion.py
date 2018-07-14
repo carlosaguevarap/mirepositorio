@@ -13,7 +13,7 @@ def read_file(filepath,columns_names):
 
 def main():
     print("Correlacion Humidity - TemperatureC - LDR")
-    df=read_file('../data/Data_Planta.csv',None);
-    df=df.corr()
+    df=read_file('../data/Data_Planta.csv',None)
+    df=df.corr('pearson')
     print(df)
 main()
